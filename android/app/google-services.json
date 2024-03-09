@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "889542269155",
+    "firebase_url": "https://bussiness-app-c4be7-default-rtdb.firebaseio.com",
+    "project_id": "bussiness-app-c4be7",
+    "storage_bucket": "bussiness-app-c4be7.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:889542269155:android:134d99826324e3102d4dd6",
+        "android_client_info": {
+          "package_name": "com.example.business_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDWRq7NHTN-C6Ch-sy_Rm6bWjaWJzlfVEQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
