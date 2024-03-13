@@ -1,5 +1,8 @@
 import 'dart:io';
 
+import 'package:business_app/features/data/model/employee.dart';
+import 'package:business_app/features/data/model/location.dart';
+import 'package:business_app/features/data/model/product.dart';
 import 'package:business_app/features/presentation/pages/Dashboard/production_list.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -17,10 +20,14 @@ class _ProductionFormState extends State<ProductionForm> {
   final TextEditingController _productNameController = TextEditingController();
   final TextEditingController _productionDateController =
       TextEditingController();
-  final TextEditingController _productionQuantityController =
+  final TextEditingController _productionWeightController =
       TextEditingController();
-  String _selectedEmployee = 'Add Employee'; // Default employee
+  final TextEditingController _productionSetController =
+      TextEditingController();
+  LocationModel? _selectedLocation;
+  Employee? _selectedEmployee;
   XFile? _pickedImage;
+Product? _selectedProduct;
 
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final ImagePicker _imagePicker = ImagePicker();
@@ -36,9 +43,15 @@ class _ProductionFormState extends State<ProductionForm> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Production Form'),
-        leading: IconButton(onPressed: (){
-Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => ProductionListScreen(),));
-        }, icon: Icon(Icons.arrow_back)),
+        leading: IconButton(
+            onPressed: () {
+              Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ProductionListScreen(),
+                  ));
+            },
+            icon: Icon(Icons.arrow_back)),
       ),
       body: SingleChildScrollView(
         child: Padding(
@@ -61,21 +74,9 @@ Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => Produ
                   readOnly: true,
                 ),
                 SizedBox(height: 10.0),
-                TextFormField(
-                  controller: _productNameController,
-                  decoration: InputDecoration(
-                    labelText: 'Product Name',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10.0),
-                    ),
-                  ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter Product Name';
-                    }
-                    return null;
-                  },
-                ),
+                _buildLocationDropdown(),
+                SizedBox(height: 10.0),
+                _buildProductDropdown(),
                 SizedBox(height: 10.0),
                 TextFormField(
                   controller: _productionDateController,
@@ -110,17 +111,25 @@ Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => Produ
                 _buildEmployeeDropdown(),
                 SizedBox(height: 10.0),
                 TextFormField(
-                  controller: _productionQuantityController,
+                  controller: _productionWeightController,
                   decoration: InputDecoration(
-                    labelText: 'Production Quantity',
+                    labelText: 'Weight Per Set',
+                    hintText: 'weight',
+                    suffix: Text('Kg/Set'),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10.0),
                     ),
                   ),
                   keyboardType: TextInputType.number,
+                  onChanged: (value) {
+                    // Calculate and update production set
+                    double weight = double.tryParse(value) ?? 0;
+                    _productionSetController.text =
+                        (weight / 10).toStringAsFixed(2);
+                  },
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'Please enter Production Quantity';
+                      return 'Please enter Production Weight';
                     }
                     return null;
                   },
@@ -195,6 +204,86 @@ Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => Produ
     );
   }
 
+  Widget _buildLocationDropdown() {
+    return StreamBuilder<QuerySnapshot>(
+      stream: _firestore.collection('locations').snapshots(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) {
+          return Container();
+        }
+
+        List<LocationModel> locations = snapshot.data!.docs
+            .map((doc) => LocationModel.fromJson(doc.data() as Map<String, dynamic>))
+            .toList();
+
+        return DropdownButtonFormField<LocationModel>(
+          value: _selectedLocation,
+          onChanged: (newValue) {
+            setState(() {
+              _selectedLocation = newValue!;
+            });
+          },
+          decoration: InputDecoration(
+            labelText: 'Location',
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10.0),
+            ),
+          ),
+          items: locations.map((location) {
+            return DropdownMenuItem<LocationModel>(
+              value: location,
+              child: ListTile(
+                title: Text(location.id ?? ''),
+                subtitle: Text(location.name ?? ''),
+              ),
+            );
+          }).toList(),
+        );
+      },
+    );
+  }
+
+  Widget _buildProductDropdown() {
+    return StreamBuilder<QuerySnapshot>(
+      stream: _firestore.collection('products').snapshots(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) {
+          return Container();
+        }
+
+        List<Product> products = snapshot.data!.docs
+            .map((doc) => Product.fromJson(doc.data() as Map<String, dynamic>))
+            .toList();
+
+        return DropdownButtonFormField<Product>(
+          value: _selectedProduct,
+          onChanged: (newValue) {
+            setState(() {
+              _selectedProduct = newValue!;
+              _productIdController.text = newValue.id ?? '';
+              _productNameController.text = newValue.name ?? '';
+            });
+          },
+          decoration: InputDecoration(
+            labelText: 'Product ID',
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10.0),
+            ),
+          ),
+          items: products.map((product) {
+            return DropdownMenuItem<Product>(
+              value: product,
+              child: ListTile(
+                title: Text(product.id ?? ''),
+                subtitle: Text(product.name ?? ''),
+              ),
+            );
+          }).toList(),
+        );
+      },
+    );
+  }
+
   Widget _buildEmployeeDropdown() {
     return StreamBuilder<QuerySnapshot>(
       stream: _firestore.collection('employees').snapshots(),
@@ -203,13 +292,11 @@ Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => Produ
           return Container();
         }
 
-        List<String> employees = ['Add Employee'];
+        List<Employee> employees = snapshot.data!.docs
+            .map((doc) => Employee.fromJson(doc.data() as Map<String, dynamic>))
+            .toList();
 
-        employees.addAll(snapshot.data!.docs
-            .map((doc) => doc['employeeId'] as String)
-            .toList());
-
-        return DropdownButtonFormField<String>(
+        return DropdownButtonFormField<Employee>(
           value: _selectedEmployee,
           onChanged: (newValue) {
             setState(() {
@@ -222,10 +309,17 @@ Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => Produ
               borderRadius: BorderRadius.circular(10.0),
             ),
           ),
-          items: employees.map<DropdownMenuItem<String>>((String value) {
-            return DropdownMenuItem<String>(
-              value: value,
-              child: Text(value),
+          items: employees.map((employee) {
+            return DropdownMenuItem<Employee>(
+              value: employee,
+              child: ListTile(
+                title: Text(employee.id ?? ''),
+                subtitle: Text(employee.name ?? ''),
+                leading: CircleAvatar(
+                  radius: 30,
+                  backgroundImage: NetworkImage(employee.employeeImage ?? ''),
+                ),
+              ),
             );
           }).toList(),
         );
@@ -269,48 +363,44 @@ Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => Produ
   }
 
   void _submitForm() async {
-  if (_formKey.currentState!.validate()) {
-    // Form is valid, proceed to store data in Firestore
-    try {
-      // Upload the image to Firebase Storage
-      if (_pickedImage != null) {
-        final storageRef = FirebaseStorage.instance
-            .ref()
-            .child('product_images/${_productIdController.text}');
-        await storageRef.putFile(File(_pickedImage!.path));
-        final imageUrl = await storageRef.getDownloadURL();
+    if (_formKey.currentState!.validate()) {
+      // Form is valid, proceed to store data in Firestore
+      try {
+        // Upload the image to Firebase Storage
+        if (_pickedImage != null) {
+          final storageRef = FirebaseStorage.instance
+              .ref()
+              .child('product_images/${_productIdController.text}');
+          await storageRef.putFile(File(_pickedImage!.path));
+          final imageUrl = await storageRef.getDownloadURL();
+          
+          // Store data in Firestore with the document ID
+          await _firestore.collection('products').doc().set({
+            'productId': _productIdController.text,
+            'productName': _productNameController.text,
+            'location': _selectedLocation!.toJson(),
+            'date': _productionDateController.text,
+            'employee': _selectedEmployee!.toJson(),
+            'weight': double.parse(_productionWeightController.text),
+            'set': double.parse(_productionSetController.text),
+            'productImageURL': imageUrl,
+          });
 
-        // Generate a new document reference with a unique ID
-        DocumentReference documentReference =
-            _firestore.collection('products').doc();
-
-        // Store data in Firestore with the document ID
-        await documentReference.set({
-          'id': documentReference.id, // Store document ID as 'id'
-          'productId': _productIdController.text,
-          'productName': _productNameController.text,
-          'productionDate': _productionDateController.text,
-          'operatingEmployees': _selectedEmployee,
-          'productionQuantity': double.parse(_productionQuantityController.text),
-          'productImageURL': imageUrl,
-        });
-
-        // Optional: Show a success message or navigate to another screen
-        ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Form submitted successfully')));
-      } else {
-        // Handle case where no image is picked
+          // Optional: Show a success message or navigate to another screen
+          ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Form submitted successfully')));
+        } else {
+          // Handle case where no image is picked
+          ScaffoldMessenger.of(context)
+              .showSnackBar(SnackBar(content: Text('Please pick an image')));
+        }
+      } catch (error) {
+        // Handle error
         ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('Please pick an image')));
+            .showSnackBar(SnackBar(content: Text('Error: $error')));
       }
-    } catch (error) {
-      // Handle error
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('Error: $error')));
     }
   }
-}
-
 
   void _resetForm() {
     _formKey.currentState!.reset();

@@ -1,79 +1,58 @@
+import 'package:business_app/features/presentation/pages/Dashboard/LocationScreen.dart';
 import 'package:business_app/features/presentation/pages/Dashboard/employee_list_scren.dart';
-import 'package:business_app/features/presentation/pages/Dashboard/inventory_list.dart';
-import 'package:business_app/features/presentation/pages/Dashboard/master_screen.dart';
 import 'package:business_app/features/presentation/pages/Dashboard/production_list.dart';
-import 'package:business_app/features/presentation/pages/Dashboard/sell_product_list.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-class OwnerDashboardScreen extends StatefulWidget {
+class MasterDetailScreen extends StatefulWidget {
   @override
-  State<OwnerDashboardScreen> createState() => _OwnerDashboardScreenState();
+  State<MasterDetailScreen> createState() => _MasterDetailScreenState();
 }
 
-class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
+class _MasterDetailScreenState extends State<MasterDetailScreen> {
   final user= FirebaseAuth.instance.currentUser;
   
   @override
   Widget build(BuildContext context) {
     Map<int, Map<String, dynamic>> Dashboard_Details = {
       0: {
-        'child': Icon(Icons.folder,size: 50,),
-        'name': 'Master',
+        'child': Icon(Icons.badge,size: 50,),
+        'name': 'Employee Master',
         'onTap': () {
-          Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => MasterDetailScreen(),));
+          Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => EmployeeListScreen(),));
         }
       },
       1: {
-        'child': Icon(Icons.factory,size: 50,),
-        'name': 'Production Details',
+        'child': Image.asset('assets/images/customer.png', height:60),
+        'name': 'Customer Master',
         'onTap': () {
           Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => ProductionListScreen(),));
         }
       },
       2: {
-        'child': Icon(CupertinoIcons.folder_badge_plus, size: 50,),
-        'name': 'Orders',
+        'child': Icon(CupertinoIcons.cube_box, size: 50,),
+        'name': 'Product Master',
         'onTap': () {
-          Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => EmployeeListScreen(),));
+          Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => ProductionListScreen(),));
         }
       },
       3: {
-        'child': Icon(Icons.production_quantity_limits,size: 50,),
-        'name': 'Rejection Details',
+        'child': Icon(Icons.location_on_sharp,size: 50,),
+        'name': 'Location Master',
         'onTap': () {
-          Navigator.pop(context);
+          Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => LocationScreen(),));
         }
       },
-      4: {
-        'child': Icon(Icons.inventory,size: 50,),
-        'name': 'Inventory',
-        'onTap': () {
-          Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => InventoryListScreen(),));
-        }
-      },
-      5: {
-        'child': Image.asset('assets/images/truck.png',height: 60,),
-        'name': 'Dispacted Details',
-        'onTap': () {
-          Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => SellListScreen(),));
-        }
-      },
-      6: {
-        'child': Icon(Icons.sell,size: 50,),
-        'name': 'Sales',
-        'onTap': () {
-          Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => SellListScreen(),));
-        }
-      }
+      
+      
     };
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Owner Dashboard'),
+        title: Text('Master'),
         actions: [
           IconButton(
             icon: Icon(Icons.logout),
@@ -100,14 +79,7 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'Welcome, Prasant',
-                      style:
-                          TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                    ),
-                    SizedBox(
-                      height: 10,
-                    ),
+                    
                     Expanded(
                       child: GridView.builder(
                         gridDelegate:

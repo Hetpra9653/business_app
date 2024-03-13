@@ -1,5 +1,3 @@
-import 'package:business_app/features/presentation/pages/Dashboard/OwnerDashboardScreen.dart';
-import 'package:business_app/features/presentation/pages/forms/employee_form.dart';
 import 'package:business_app/features/presentation/pages/forms/production_form.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
@@ -13,7 +11,7 @@ class ProductionListScreen extends StatelessWidget {
       appBar: AppBar(
         title: Text('Production List'),
         leading: IconButton(onPressed: (){
-          Navigator.pushReplacement(context,MaterialPageRoute(builder: (context) => OwnerDashboardScreen(),));
+          Navigator.pop(context);
         }, icon: Icon(Icons.arrow_back_ios)),
       ),
       floatingActionButton: FloatingActionButton(

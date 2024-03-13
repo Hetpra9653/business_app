@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:business_app/features/data/model/employee.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:image_picker/image_picker.dart';
@@ -14,9 +15,12 @@ class _EmployeeFormState extends State<EmployeeForm> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final TextEditingController _employeeIdController = TextEditingController();
   final TextEditingController _employeeNameController = TextEditingController();
-  final TextEditingController _employeeBirthdateController = TextEditingController();
-  final TextEditingController _employeeJoiningDateController = TextEditingController();
-  final TextEditingController _employeeSalaryController = TextEditingController();
+  final TextEditingController _employeeBirthdateController =
+      TextEditingController();
+  final TextEditingController _employeeJoiningDateController =
+      TextEditingController();
+  final TextEditingController _employeeSalaryController =
+      TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _aadharController = TextEditingController();
   String _selectedBranch = 'Ahmedabad'; // Default branch
@@ -36,9 +40,11 @@ class _EmployeeFormState extends State<EmployeeForm> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        leading: IconButton(onPressed: (){
-          Navigator.pop(context);
-        }, icon: Icon(Icons.arrow_back_ios)),
+        leading: IconButton(
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            icon: Icon(Icons.arrow_back_ios)),
         title: Text('Employee Form'),
       ),
       body: SingleChildScrollView(
@@ -94,8 +100,10 @@ class _EmployeeFormState extends State<EmployeeForm> {
                       lastDate: DateTime.now(),
                     );
 
-                    if (selectedDate != null && selectedDate != DateTime.now()) {
-                      _employeeBirthdateController.text = selectedDate.toLocal().toString().split(' ')[0];
+                    if (selectedDate != null &&
+                        selectedDate != DateTime.now()) {
+                      _employeeBirthdateController.text =
+                          selectedDate.toLocal().toString().split(' ')[0];
                     }
                   },
                   validator: (value) {
@@ -122,8 +130,10 @@ class _EmployeeFormState extends State<EmployeeForm> {
                       lastDate: DateTime.now(),
                     );
 
-                    if (selectedDate != null && selectedDate != DateTime.now()) {
-                      _employeeJoiningDateController.text = selectedDate.toLocal().toString().split(' ')[0];
+                    if (selectedDate != null &&
+                        selectedDate != DateTime.now()) {
+                      _employeeJoiningDateController.text =
+                          selectedDate.toLocal().toString().split(' ')[0];
                     }
                   },
                   validator: (value) {
@@ -147,7 +157,8 @@ class _EmployeeFormState extends State<EmployeeForm> {
                       borderRadius: BorderRadius.circular(10.0),
                     ),
                   ),
-                  items: ['Ahmedabad', 'Una', 'Bakrol'].map<DropdownMenuItem<String>>((String value) {
+                  items: ['Ahmedabad', 'Una', 'Bakrol']
+                      .map<DropdownMenuItem<String>>((String value) {
                     return DropdownMenuItem<String>(
                       value: value,
                       child: Text(value),
@@ -225,7 +236,8 @@ class _EmployeeFormState extends State<EmployeeForm> {
                       borderRadius: BorderRadius.circular(10.0),
                     ),
                   ),
-                  items: ['Full time', 'Part time', 'Per Day'].map<DropdownMenuItem<String>>((String value) {
+                  items: ['Full time', 'Part time', 'Per Day']
+                      .map<DropdownMenuItem<String>>((String value) {
                     return DropdownMenuItem<String>(
                       value: value,
                       child: Text(value),
@@ -233,7 +245,6 @@ class _EmployeeFormState extends State<EmployeeForm> {
                   }).toList(),
                 ),
                 SizedBox(height: 10.0),
-               
                 SizedBox(height: 20.0),
                 Row(
                   children: [
@@ -305,7 +316,11 @@ class _EmployeeFormState extends State<EmployeeForm> {
   }
 
   void _fetchLastEmployeeId() async {
-    QuerySnapshot querySnapshot = await _firestore.collection('employees').orderBy('employeeId', descending: true).limit(1).get();
+    QuerySnapshot querySnapshot = await _firestore
+        .collection('employees')
+        .orderBy('employeeId', descending: true)
+        .limit(1)
+        .get();
     if (querySnapshot.docs.isNotEmpty) {
       String lastEmployeeId = querySnapshot.docs.first['employeeId'];
       String nextEmployeeId = _generateNextEmployeeId(lastEmployeeId);
@@ -325,7 +340,8 @@ class _EmployeeFormState extends State<EmployeeForm> {
   }
 
   void _pickImage() async {
-    final pickedFile = await _imagePicker.pickImage(source: ImageSource.gallery);
+    final pickedFile =
+        await _imagePicker.pickImage(source: ImageSource.gallery);
 
     if (pickedFile != null) {
       setState(() {
@@ -340,33 +356,40 @@ class _EmployeeFormState extends State<EmployeeForm> {
       try {
         // Upload the image to Firebase Storage
         if (_pickedImage != null) {
-          final storageRef = FirebaseStorage.instance.ref().child('employee_images/${_employeeIdController.text}');
+          final storageRef = FirebaseStorage.instance
+              .ref()
+              .child('employee_images/${_employeeIdController.text}');
           await storageRef.putFile(File(_pickedImage!.path));
           final imageUrl = await storageRef.getDownloadURL();
 
           // Store data in Firestore
           await _firestore.collection('employees').add({
-            'employeeId': _employeeIdController.text,
-            'employeeName': _employeeNameController.text,
-            'employeeBirthdate': _employeeBirthdateController.text,
-            'employeeJoiningDate': _employeeJoiningDateController.text,
-            'employeeBranch': _selectedBranch,
-            'employeeSalary': double.parse(_employeeSalaryController.text),
-            'phone': _phoneController.text,
-            'aadhar': _aadharController.text,
-            'jobType': _selectedJobType,
-            'employeeImageURL': imageUrl,
+            'EmployeeDetails': Employee(
+              id: _employeeIdController.text,
+              name: _employeeNameController.text,
+              birthdate: _employeeBirthdateController.text,
+              joiningDate: _employeeJoiningDateController.text,
+              location: _selectedBranch,
+              salary: double.parse(_employeeSalaryController.text).toString(),
+              phonenumber: _phoneController.text,
+              aadharNumber: _aadharController.text,
+              mode: _selectedJobType,
+              employeeImage: imageUrl,
+            )
           });
 
           // Optional: Show a success message or navigate to another screen
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Form submitted successfully')));
+          ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Form submitted successfully')));
         } else {
           // Handle case where no image is picked
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Please pick an image')));
+          ScaffoldMessenger.of(context)
+              .showSnackBar(SnackBar(content: Text('Please pick an image')));
         }
       } catch (error) {
         // Handle error
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $error')));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('Error: $error')));
       }
     }
   }
